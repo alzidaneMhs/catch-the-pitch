@@ -1,5 +1,4 @@
-import MicPitchDemo from "@/components/audio/MicPitchDemo";
-import TrackPlayer from "@/components/audio/TrackPlayer";
+import KaraokeStage from "@/components/karaoke/KaraokeStage";
 
 export default function Home() {
   return (
@@ -8,13 +7,12 @@ export default function Home() {
         <header>
           <h1 className="text-2xl font-bold">Catch The Pitch</h1>
           <p className="mt-2 text-white/60">
-            Fase 1: eksperimen dasar Web Audio API — tangkap mikrofon, deteksi
-            pitch real-time (Pitchfinder/YIN), dan putar backing track.
+            Fase 2: sesi karaoke — putar backing track sambil merekam vokal
+            dan melacak pitch secara real-time.
           </p>
         </header>
 
-        <MicPitchDemo />
-        <TrackPlayer />
+        <KaraokeStage />
       </main>
     </div>
   );
