@@ -1,36 +1,36 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Catch The Pitch
 
-## Getting Started
+Aplikasi web karaoke sekaligus penganalisis performa vokal real-time — mendeteksi ketidaksesuaian nada (*fals*), memvisualisasikan pitch ala Melodyne, dan memberi skor/grade vokal.
 
-First, run the development server:
+Lihat rencana lengkap di `planning_projek_audio_web.md`.
+
+## Status: Fase 1 — Setup & Core Audio
+
+Fase ini membuktikan tiga fondasi teknis:
+1. Proyek Next.js (App Router) + TypeScript + Tailwind CSS.
+2. Web Audio API: menangkap mikrofon (`getUserMedia`) dan memutar file audio (`decodeAudioData` + `AudioBufferSourceNode`).
+3. Deteksi pitch real-time memakai [Pitchfinder](https://github.com/peterkhayes/pitchfinder) (algoritma YIN), dengan noise gate (RMS threshold) dan median filter untuk smoothing.
+
+### Struktur kode audio
+- `src/lib/audio/microphone.ts` — setup `AudioContext` + `AnalyserNode` dari input mikrofon.
+- `src/lib/audio/pitchDetector.ts` — wrapper Pitchfinder YIN + noise gate + median filter.
+- `src/lib/audio/noteUtils.ts` — konversi frekuensi (Hz) ke nama not musik + deviasi cents.
+- `src/lib/audio/playback.ts` — pemutaran file audio (backing track) dengan play/pause/stop.
+- `src/components/audio/MicPitchDemo.tsx` — UI demo deteksi pitch real-time dari mikrofon.
+- `src/components/audio/TrackPlayer.tsx` — UI demo upload & pemutaran backing track.
+
+## Menjalankan proyek
 
 ```bash
+npm install
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Buka [http://localhost:3000](http://localhost:3000). Klik **Start Mic** dan izinkan akses mikrofon di browser untuk melihat deteksi pitch real-time (Hz, not, dan deviasi cents).
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Roadmap selanjutnya
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
-
-## Learn More
-
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+- **Fase 2**: Antarmuka karaoke penuh, sinkronisasi rekaman vokal dengan backing track.
+- **Fase 3**: Visualizer grid pitch-time ala Melodyne (Canvas API).
+- **Fase 4**: Scoring engine, deteksi vocal range, grading A–F.
+- **Fase 5**: Integrasi Supabase (auth, storage, riwayat skor) & deploy ke Vercel.
