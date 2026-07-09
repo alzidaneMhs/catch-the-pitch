@@ -1,8 +1,12 @@
-import { frequencyToNote, midiToNoteName } from "@/lib/audio/noteUtils";
+import { midiToNoteName } from "@/lib/audio/noteUtils";
+import {
+  extractVoicedFrames,
+  groupIntoNoteSegments,
+  type VoicedFrame,
+} from "@/lib/audio/noteSegments";
 import type { PitchTracePoint } from "@/lib/audio/karaokeSession";
 
 const IN_TUNE_CENTS_THRESHOLD = 15;
-const SEGMENT_GAP_SECONDS = 0.25;
 const MIN_SUSTAINED_FRAMES = 5;
 
 export type VocalGrade = "A" | "B" | "C" | "D" | "F";
@@ -20,12 +24,6 @@ export interface VocalScoreResult {
   grade: VocalGrade;
   offPitchCount: number;
   vocalRange: VocalRangeResult | null;
-}
-
-interface VoicedFrame {
-  time: number;
-  midiNumber: number;
-  cents: number;
 }
 
 // Rentang not standar per jenis suara (referensi umum, dalam MIDI number).
@@ -65,16 +63,6 @@ export function computeVocalScore(pitchTrace: PitchTracePoint[]): VocalScoreResu
   };
 }
 
-function extractVoicedFrames(pitchTrace: PitchTracePoint[]): VoicedFrame[] {
-  const frames: VoicedFrame[] = [];
-  for (const point of pitchTrace) {
-    if (point.frequency === null) continue;
-    const note = frequencyToNote(point.frequency);
-    frames.push({ time: point.time, midiNumber: note.midiNumber, cents: note.cents });
-  }
-  return frames;
-}
-
 // Akurasi dinilai dari seberapa dekat tiap frame ke not terdekat (deviasi cents),
 // bukan perbandingan ke melodi referensi lagu asli -- lagu instrumen tidak
 // menyertakan data melodi vokal referensi.
@@ -96,7 +84,7 @@ function countOffPitchSegments(frames: VoicedFrame[]): number {
 }
 
 function computeStabilityScore(frames: VoicedFrame[]): number {
-  const sustainedSegments = groupIntoSegments(frames).filter(
+  const sustainedSegments = groupIntoNoteSegments(frames).filter(
     (segment) => segment.length >= MIN_SUSTAINED_FRAMES,
   );
   if (sustainedSegments.length === 0) return 100;
@@ -105,29 +93,6 @@ function computeStabilityScore(frames: VoicedFrame[]): number {
     sustainedSegments.reduce((sum, segment) => sum + centsStdDev(segment), 0) /
     sustainedSegments.length;
   return clamp(100 - avgStdDev * 2, 0, 100);
-}
-
-function groupIntoSegments(frames: VoicedFrame[]): VoicedFrame[][] {
-  const segments: VoicedFrame[][] = [];
-  let current: VoicedFrame[] = [];
-
-  frames.forEach((frame, i) => {
-    const prev = frames[i - 1];
-    const continuesSameNote =
-      prev !== undefined &&
-      prev.midiNumber === frame.midiNumber &&
-      frame.time - prev.time <= SEGMENT_GAP_SECONDS;
-
-    if (continuesSameNote) {
-      current.push(frame);
-    } else {
-      if (current.length > 0) segments.push(current);
-      current = [frame];
-    }
-  });
-  if (current.length > 0) segments.push(current);
-
-  return segments;
 }
 
 function centsStdDev(segment: VoicedFrame[]): number {
