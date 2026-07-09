@@ -1,15 +1,21 @@
 "use client";
 
-import { useCallback, useMemo, useState, type ReactNode } from "react";
+import { useCallback, useEffect, useMemo, useState, type ReactNode } from "react";
 import { useKaraokeSession } from "@/hooks/useKaraokeSession";
 import PitchVisualizer, { type TimeRange } from "./PitchVisualizer";
 import PitchLegend from "./PitchLegend";
 import PitchIssueList from "./PitchIssueList";
 import ScoreDashboard from "./ScoreDashboard";
+import MicPermissionHelp from "./MicPermissionHelp";
 import { IN_TUNE_CENTS_THRESHOLD } from "@/lib/audio/noteSegments";
 import { computeVocalScore } from "@/lib/scoring/vocalScoring";
 import { detectPitchIssues, type PitchIssue } from "@/lib/scoring/pitchIssues";
 import { useLocale } from "@/lib/i18n/LocaleContext";
+
+const LATENCY_STORAGE_KEY = "catch-the-pitch-latency-ms";
+const LATENCY_MIN = -300;
+const LATENCY_MAX = 300;
+const LATENCY_STEP = 10;
 
 export default function KaraokeStage() {
   const { t } = useLocale();
@@ -22,12 +28,26 @@ export default function KaraokeStage() {
     livePitchTrace,
     result,
     error,
+    micErrorType,
     loadBackingTrack,
     start,
     stop,
   } = useKaraokeSession();
 
   const [zoomRange, setZoomRange] = useState<TimeRange | null>(null);
+  const [latencyMs, setLatencyMsState] = useState(0);
+
+  useEffect(() => {
+    const stored = window.localStorage.getItem(LATENCY_STORAGE_KEY);
+    const parsed = stored ? Number(stored) : 0;
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- sinkronisasi sekali dari localStorage saat mount
+    setLatencyMsState(Number.isFinite(parsed) ? parsed : 0);
+  }, []);
+
+  const setLatencyMs = useCallback((value: number) => {
+    setLatencyMsState(value);
+    window.localStorage.setItem(LATENCY_STORAGE_KEY, String(value));
+  }, []);
 
   const handleFileChange = useCallback(
     (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -100,6 +120,35 @@ export default function KaraokeStage() {
         </div>
       </details>
 
+      <details className="mb-4 rounded-lg bg-white/5 p-3 text-sm">
+        <summary className="cursor-pointer font-medium text-white/80">
+          {t("settings.title")}
+        </summary>
+        <div className="mt-3 space-y-2">
+          <div className="flex items-center justify-between">
+            <label htmlFor="latency-slider" className="text-white/70">
+              {t("settings.latency.label")}
+            </label>
+            <span className="tabular-nums text-white/50">
+              {latencyMs > 0 ? "+" : ""}
+              {latencyMs} ms
+            </span>
+          </div>
+          <input
+            id="latency-slider"
+            type="range"
+            min={LATENCY_MIN}
+            max={LATENCY_MAX}
+            step={LATENCY_STEP}
+            value={latencyMs}
+            onChange={(event) => setLatencyMs(Number(event.target.value))}
+            disabled={isRecording}
+            className="w-full accent-sky-500 disabled:opacity-40"
+          />
+          <p className="text-xs text-white/40">{t("settings.latency.desc")}</p>
+        </div>
+      </details>
+
       <label className="mb-1.5 block text-sm font-medium text-white/80">
         {t("stage.upload.label")}
       </label>
@@ -114,7 +163,17 @@ export default function KaraokeStage() {
         className="block w-full text-sm text-white/70 file:mr-4 file:rounded-lg file:border-0 file:bg-white/10 file:px-4 file:py-2 file:text-sm file:font-medium file:text-white hover:file:bg-white/20 disabled:opacity-40"
       />
 
-      {error && <p className="mt-3 text-sm text-red-400">{error}</p>}
+      {micErrorType ? (
+        <MicPermissionHelp
+          errorType={micErrorType}
+          onRetry={() => {
+            setZoomRange(null);
+            void start(latencyMs);
+          }}
+        />
+      ) : (
+        error && <p className="mt-3 text-sm text-red-400">{error}</p>
+      )}
 
       {fileName && (
         <div className="mt-4 space-y-4">
@@ -124,7 +183,7 @@ export default function KaraokeStage() {
             <button
               onClick={() => {
                 setZoomRange(null);
-                void start();
+                void start(latencyMs);
               }}
               disabled={!canStart}
               className="rounded-lg bg-emerald-600 px-4 py-2 text-sm font-medium text-white hover:bg-emerald-500 disabled:opacity-40 disabled:hover:bg-emerald-600"

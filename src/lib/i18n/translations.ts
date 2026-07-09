@@ -40,6 +40,33 @@ const id = {
   "error.startRecording": "Gagal memulai rekaman: {{message}}",
   "error.startRecordingGeneric": "Gagal memulai rekaman.",
 
+  "micError.denied.title": "Akses Mikrofon Ditolak",
+  "micError.denied.desc":
+    "Browser memblokir akses mikrofon untuk situs ini. Ikuti langkah berikut untuk mengaktifkannya kembali:",
+  "micError.notFound.title": "Mikrofon Tidak Ditemukan",
+  "micError.notFound.desc":
+    "Tidak ada mikrofon yang terdeteksi di perangkatmu. Pastikan mikrofon sudah terpasang dan tidak sedang dinonaktifkan.",
+  "micError.notReadable.title": "Mikrofon Sedang Digunakan",
+  "micError.notReadable.desc":
+    "Mikrofon sedang dipakai aplikasi lain, atau ada masalah pada perangkat keras. Tutup aplikasi lain yang mungkin memakai mikrofon, lalu coba lagi.",
+  "micError.unsupported.title": "Browser Tidak Mendukung",
+  "micError.unsupported.desc":
+    "Browser ini tidak mendukung akses mikrofon, atau situs tidak dibuka lewat koneksi aman (HTTPS). Coba gunakan Chrome, Firefox, Safari, atau Edge terbaru.",
+  "micError.unknown.title": "Gagal Mengakses Mikrofon",
+  "micError.unknown.desc":
+    "Terjadi masalah saat mencoba mengakses mikrofon. Coba muat ulang halaman dan coba lagi.",
+  "micError.step1": "Klik ikon kunci/kamera di sebelah alamat URL browser.",
+  "micError.step2": "Cari pengaturan \"Mikrofon\" dan ubah jadi \"Izinkan\".",
+  "micError.step3": "Muat ulang halaman ini, lalu klik \"Coba Lagi\" di bawah.",
+  "micError.safariNote":
+    "Di iPhone/iPad (Safari): buka Pengaturan → Safari → Mikrofon, lalu izinkan untuk situs ini.",
+  "micError.retry": "Coba Lagi",
+
+  "settings.title": "Pengaturan Lanjutan",
+  "settings.latency.label": "Kalibrasi Latensi Audio",
+  "settings.latency.desc":
+    "Geser kalau earphone Bluetooth/TWS-mu ada delay suara, supaya waktu di Pitch Grid dan daftar masalah lebih akurat. Positif = geser lebih lambat, negatif = lebih cepat.",
+
   "legend.inTune": "Tepat",
   "legend.sharp": "Terlalu tinggi",
   "legend.flat": "Terlalu rendah",
@@ -110,6 +137,33 @@ const en: Record<keyof typeof id, string> = {
   "error.loadTrackGeneric": "Failed to load backing track.",
   "error.startRecording": "Failed to start recording: {{message}}",
   "error.startRecordingGeneric": "Failed to start recording.",
+
+  "micError.denied.title": "Microphone Access Denied",
+  "micError.denied.desc":
+    "Your browser is blocking microphone access for this site. Follow these steps to re-enable it:",
+  "micError.notFound.title": "No Microphone Found",
+  "micError.notFound.desc":
+    "No microphone was detected on your device. Make sure a microphone is connected and not disabled.",
+  "micError.notReadable.title": "Microphone In Use",
+  "micError.notReadable.desc":
+    "Your microphone is being used by another app, or there's a hardware issue. Close other apps that might be using it, then try again.",
+  "micError.unsupported.title": "Browser Not Supported",
+  "micError.unsupported.desc":
+    "This browser doesn't support microphone access, or the site isn't loaded over a secure (HTTPS) connection. Try the latest Chrome, Firefox, Safari, or Edge.",
+  "micError.unknown.title": "Failed to Access Microphone",
+  "micError.unknown.desc":
+    "Something went wrong while trying to access the microphone. Try reloading the page and trying again.",
+  "micError.step1": "Click the lock/camera icon next to the browser's address bar.",
+  "micError.step2": "Find the \"Microphone\" setting and change it to \"Allow\".",
+  "micError.step3": "Reload this page, then click \"Try Again\" below.",
+  "micError.safariNote":
+    "On iPhone/iPad (Safari): go to Settings → Safari → Microphone, and allow access for this site.",
+  "micError.retry": "Try Again",
+
+  "settings.title": "Advanced Settings",
+  "settings.latency.label": "Audio Latency Calibration",
+  "settings.latency.desc":
+    "Adjust if your Bluetooth/TWS earphones have audio delay, so timestamps on the Pitch Grid and issue list are more accurate. Positive = shift later, negative = shift earlier.",
 
   "legend.inTune": "In tune",
   "legend.sharp": "Too high",

@@ -8,6 +8,7 @@ import {
   type PitchTracePoint,
 } from "@/lib/audio/karaokeSession";
 import { frequencyToNote, type NoteInfo } from "@/lib/audio/noteUtils";
+import { classifyMicError, type MicErrorType } from "@/lib/audio/micErrors";
 import { useLocale } from "@/lib/i18n/LocaleContext";
 
 export function useKaraokeSession() {
@@ -20,6 +21,7 @@ export function useKaraokeSession() {
   const [livePitchTrace, setLivePitchTrace] = useState<PitchTracePoint[]>([]);
   const [result, setResult] = useState<KaraokeSessionResult | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [micErrorType, setMicErrorType] = useState<MicErrorType | null>(null);
 
   const sessionRef = useRef<KaraokeSession | null>(null);
 
@@ -47,6 +49,7 @@ export function useKaraokeSession() {
   const loadBackingTrack = useCallback(
     async (file: File) => {
       setError(null);
+      setMicErrorType(null);
       setResult(null);
       try {
         const session = ensureSession();
@@ -64,20 +67,25 @@ export function useKaraokeSession() {
     [ensureSession, t],
   );
 
-  const start = useCallback(async () => {
-    setError(null);
-    setElapsed(0);
-    setLivePitchTrace([]);
-    try {
-      await sessionRef.current?.start();
-    } catch (err) {
-      setError(
-        err instanceof Error
-          ? t("error.startRecording", { message: err.message })
-          : t("error.startRecordingGeneric"),
-      );
-    }
-  }, [t]);
+  const start = useCallback(
+    async (latencyOffsetMs: number = 0) => {
+      setError(null);
+      setMicErrorType(null);
+      setElapsed(0);
+      setLivePitchTrace([]);
+      try {
+        await sessionRef.current?.start(latencyOffsetMs);
+      } catch (err) {
+        setMicErrorType(classifyMicError(err));
+        setError(
+          err instanceof Error
+            ? t("error.startRecording", { message: err.message })
+            : t("error.startRecordingGeneric"),
+        );
+      }
+    },
+    [t],
+  );
 
   const stop = useCallback(async () => {
     await sessionRef.current?.stop();
@@ -92,6 +100,7 @@ export function useKaraokeSession() {
     livePitchTrace,
     result,
     error,
+    micErrorType,
     loadBackingTrack,
     start,
     stop,

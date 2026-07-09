@@ -64,12 +64,13 @@ export class KaraokeSession {
     this.callbacks.onStatusChange?.("ready");
   }
 
-  async start(): Promise<void> {
+  async start(latencyOffsetMs: number = 0): Promise<void> {
     if (!this.trackPlayer) throw new Error("Backing track belum dimuat");
 
     this.micSource = await createMicrophoneSource();
     const detector = createPitchDetector(this.micSource.audioContext.sampleRate);
     const buffer = new Float32Array(this.micSource.analyser.fftSize);
+    const offsetSeconds = latencyOffsetMs / 1000;
 
     const mimeType = pickSupportedMimeType();
     this.mediaRecorder = new MediaRecorder(
@@ -92,12 +93,16 @@ export class KaraokeSession {
       if (!this.micSource) return;
       this.micSource.analyser.getFloatTimeDomainData(buffer);
       const reading = detector(buffer);
+      const elapsedSeconds = (performance.now() - this.startedAt) / 1000;
+      // point.time dikalibrasi dengan offset latensi (untuk akurasi Pitch Grid
+      // & daftar masalah), sedangkan elapsedSeconds tetap wall-clock asli
+      // supaya progress bar & auto-stop timer tidak ikut bergeser.
       const point: PitchTracePoint = {
-        time: (performance.now() - this.startedAt) / 1000,
+        time: Math.max(0, elapsedSeconds + offsetSeconds),
         frequency: reading?.frequency ?? null,
       };
       this.pitchTrace.push(point);
-      this.callbacks.onTick?.(point.time, point);
+      this.callbacks.onTick?.(elapsedSeconds, point);
       this.rafId = requestAnimationFrame(tick);
     };
     this.rafId = requestAnimationFrame(tick);
