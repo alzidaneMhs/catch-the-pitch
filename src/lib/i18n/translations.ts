@@ -6,6 +6,19 @@ const id = {
     "Fase 2: sesi karaoke — putar backing track sambil merekam vokal dan melacak pitch secara real-time.",
 
   "stage.title": "Sesi Karaoke",
+  "stage.tutorial.title": "Cara Memulai",
+  "stage.tutorial.step1":
+    "**Upload lagu instrumental/karaoke** (MP3/WAV) di bawah ini — ini backing track yang akan diputar. **Bukan tempat upload rekaman suaramu.**",
+  "stage.tutorial.step2":
+    "Klik **\"Mulai Karaoke\"**, lalu izinkan akses mikrofon saat diminta browser.",
+  "stage.tutorial.step3":
+    "Bernyanyi mengikuti lagu yang diputar — suaramu **direkam otomatis lewat mikrofon**, tidak perlu upload manual.",
+  "stage.tutorial.step4":
+    "Klik **\"Stop\"** kapan saja, atau tunggu lagunya selesai otomatis.",
+  "stage.tutorial.step5": "Lihat hasilnya: skor, grafik nada, dan bagian yang perlu diperbaiki.",
+  "stage.upload.label": "Langkah 1: Upload Backing Track",
+  "stage.upload.caption":
+    "File di sini untuk lagu instrumental/karaoke yang mau kamu nyanyikan — **bukan rekaman suaramu**. Suaramu direkam otomatis lewat mikrofon saat kamu klik \"Mulai Karaoke\".",
   "stage.help.summary": "Cara membaca hasil analisis",
   "stage.help.grid":
     "**Pitch Grid** menampilkan nada yang kamu nyanyikan dari waktu ke waktu — sumbu vertikal adalah nada, sumbu horizontal adalah waktu. Hijau berarti nada tepat, kuning berarti terlalu tinggi, ungu berarti terlalu rendah.",
@@ -64,6 +77,19 @@ const en: Record<keyof typeof id, string> = {
     "Phase 2: karaoke session — play a backing track while recording your voice and tracking pitch in real time.",
 
   "stage.title": "Karaoke Session",
+  "stage.tutorial.title": "How to Start",
+  "stage.tutorial.step1":
+    "**Upload an instrumental/karaoke track** (MP3/WAV) below — this is the backing track that will play. **It is not for uploading a recording of your voice.**",
+  "stage.tutorial.step2":
+    "Click **\"Start Karaoke\"**, then allow microphone access when your browser asks.",
+  "stage.tutorial.step3":
+    "Sing along to the track as it plays — your voice is **recorded automatically through the microphone**, no manual upload needed.",
+  "stage.tutorial.step4":
+    "Click **\"Stop\"** anytime, or wait for the song to finish automatically.",
+  "stage.tutorial.step5": "View your results: score, pitch grid, and parts to improve.",
+  "stage.upload.label": "Step 1: Upload Backing Track",
+  "stage.upload.caption":
+    "This is for the instrumental/karaoke song you want to sing along to — **not a recording of your voice**. Your voice is recorded automatically through the microphone when you click \"Start Karaoke\".",
   "stage.help.summary": "How to read your results",
   "stage.help.grid":
     "The **Pitch Grid** shows the notes you sang over time — the vertical axis is pitch, the horizontal axis is time. Green means the note was accurate, yellow means too high, purple means too low.",

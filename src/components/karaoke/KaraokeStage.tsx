@@ -62,6 +62,27 @@ export default function KaraokeStage() {
     <div className="rounded-xl border border-white/10 bg-white/5 p-4 sm:p-6">
       <h2 className="text-lg font-semibold mb-4">{t("stage.title")}</h2>
 
+      <div className="mb-4 rounded-lg border border-sky-500/20 bg-sky-500/5 p-3 text-sm">
+        <p className="mb-2 font-medium text-white/80">{t("stage.tutorial.title")}</p>
+        <ol className="list-decimal space-y-1 pl-4 text-white/60">
+          <li>
+            <BoldText text={t("stage.tutorial.step1")} />
+          </li>
+          <li>
+            <BoldText text={t("stage.tutorial.step2")} />
+          </li>
+          <li>
+            <BoldText text={t("stage.tutorial.step3")} />
+          </li>
+          <li>
+            <BoldText text={t("stage.tutorial.step4")} />
+          </li>
+          <li>
+            <BoldText text={t("stage.tutorial.step5")} />
+          </li>
+        </ol>
+      </div>
+
       <details className="mb-4 rounded-lg bg-white/5 p-3 text-sm">
         <summary className="cursor-pointer font-medium text-white/80">
           {t("stage.help.summary")}
@@ -79,6 +100,12 @@ export default function KaraokeStage() {
         </div>
       </details>
 
+      <label className="mb-1.5 block text-sm font-medium text-white/80">
+        {t("stage.upload.label")}
+      </label>
+      <p className="mb-2 text-xs text-white/50">
+        <BoldText text={t("stage.upload.caption")} />
+      </p>
       <input
         type="file"
         accept="audio/mpeg,audio/wav,audio/mp3,.mp3,.wav"
