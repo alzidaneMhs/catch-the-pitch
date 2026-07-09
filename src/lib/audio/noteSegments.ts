@@ -3,6 +3,8 @@ import type { PitchTracePoint } from "./karaokeSession";
 
 const DEFAULT_SEGMENT_GAP_SECONDS = 0.25;
 
+export const IN_TUNE_CENTS_THRESHOLD = 15;
+
 export interface VoicedFrame {
   time: number;
   frequency: number;
@@ -49,4 +51,11 @@ export function groupIntoNoteSegments(
   if (current.length > 0) segments.push(current);
 
   return segments;
+}
+
+export function centsStdDev(segment: VoicedFrame[]): number {
+  const mean = segment.reduce((sum, f) => sum + f.cents, 0) / segment.length;
+  const variance =
+    segment.reduce((sum, f) => sum + (f.cents - mean) ** 2, 0) / segment.length;
+  return Math.sqrt(variance);
 }

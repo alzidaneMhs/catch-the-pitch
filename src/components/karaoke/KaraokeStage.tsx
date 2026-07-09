@@ -1,12 +1,14 @@
 "use client";
 
-import { useCallback, useMemo } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { useKaraokeSession } from "@/hooks/useKaraokeSession";
-import PitchVisualizer from "./PitchVisualizer";
+import PitchVisualizer, { type TimeRange } from "./PitchVisualizer";
+import PitchLegend from "./PitchLegend";
+import PitchIssueList from "./PitchIssueList";
 import ScoreDashboard from "./ScoreDashboard";
+import { IN_TUNE_CENTS_THRESHOLD } from "@/lib/audio/noteSegments";
 import { computeVocalScore } from "@/lib/scoring/vocalScoring";
-
-const IN_TUNE_CENTS_THRESHOLD = 15;
+import { detectPitchIssues, type PitchIssue } from "@/lib/scoring/pitchIssues";
 
 export default function KaraokeStage() {
   const {
@@ -23,6 +25,8 @@ export default function KaraokeStage() {
     stop,
   } = useKaraokeSession();
 
+  const [zoomRange, setZoomRange] = useState<TimeRange | null>(null);
+
   const handleFileChange = useCallback(
     (event: React.ChangeEvent<HTMLInputElement>) => {
       const file = event.target.files?.[0];
@@ -32,6 +36,7 @@ export default function KaraokeStage() {
   );
 
   const isRecording = status === "recording";
+  const isFinished = status === "finished";
   const canStart = status === "ready" || status === "finished";
   const isInTune = liveNote ? Math.abs(liveNote.cents) <= IN_TUNE_CENTS_THRESHOLD : false;
 
@@ -39,10 +44,55 @@ export default function KaraokeStage() {
     () => (result ? computeVocalScore(result.pitchTrace) : null),
     [result],
   );
+  const issues = useMemo(
+    () => (result ? detectPitchIssues(result.pitchTrace) : []),
+    [result],
+  );
+
+  const handleSelectIssue = useCallback((issue: PitchIssue) => {
+    setZoomRange({
+      start: Math.max(0, issue.startTime - 1),
+      end: issue.endTime + 1,
+    });
+  }, []);
 
   return (
     <div className="rounded-xl border border-white/10 bg-white/5 p-6">
       <h2 className="text-lg font-semibold mb-4">Karaoke Session</h2>
+
+      <details className="mb-4 rounded-lg bg-white/5 p-3 text-sm">
+        <summary className="cursor-pointer font-medium text-white/80">
+          Cara membaca hasil analisis
+        </summary>
+        <div className="mt-2 space-y-1.5 text-white/60">
+          <p>
+            <strong className="text-white/80">Pitch Grid</strong> menampilkan
+            nada yang kamu nyanyikan dari waktu ke waktu — sumbu vertikal
+            adalah nada, sumbu horizontal adalah waktu. Hijau berarti nada
+            tepat, kuning berarti terlalu tinggi, ungu berarti terlalu rendah.
+          </p>
+          <p>
+            Setelah selesai, kamu bisa{" "}
+            <strong className="text-white/80">
+              seret (drag) pada grid untuk memperbesar (zoom)
+            </strong>{" "}
+            bagian tertentu, atau klik salah satu item di daftar{" "}
+            <strong className="text-white/80">
+              &quot;Bagian yang perlu diperbaiki&quot;
+            </strong>{" "}
+            untuk langsung melihat detailnya.
+          </p>
+          <p>
+            <strong className="text-white/80">Akurasi Nada</strong> mengukur
+            seberapa presisi nadamu, <strong className="text-white/80">
+              Stabilitas Kontrol
+            </strong>{" "}
+            mengukur seberapa steady kamu menahan nada panjang, dan{" "}
+            <strong className="text-white/80">Frekuensi Fals</strong> menghitung
+            berapa kali nadamu melenceng cukup jauh.
+          </p>
+        </div>
+      </details>
 
       <input
         type="file"
@@ -60,7 +110,10 @@ export default function KaraokeStage() {
 
           <div className="flex gap-2">
             <button
-              onClick={() => void start()}
+              onClick={() => {
+                setZoomRange(null);
+                void start();
+              }}
               disabled={!canStart}
               className="rounded-lg bg-emerald-600 px-4 py-2 text-sm font-medium text-white hover:bg-emerald-500 disabled:opacity-40 disabled:hover:bg-emerald-600"
             >
@@ -107,23 +160,42 @@ export default function KaraokeStage() {
             </div>
           )}
 
-          {(isRecording || status === "finished") && (
+          {(isRecording || isFinished) && (
             <div className="space-y-2">
-              <span className="text-sm text-white/50">
-                Pitch Grid {isRecording ? "(live)" : ""}
-              </span>
+              <div className="flex items-center justify-between">
+                <span className="text-sm text-white/50">
+                  Pitch Grid {isRecording ? "(live)" : ""}
+                </span>
+                {isFinished && zoomRange && (
+                  <button
+                    onClick={() => setZoomRange(null)}
+                    className="text-xs text-sky-400 hover:text-sky-300"
+                  >
+                    Reset Zoom
+                  </button>
+                )}
+              </div>
               <PitchVisualizer
-                pitchTrace={
-                  status === "finished" && result
-                    ? result.pitchTrace
-                    : livePitchTrace
-                }
+                pitchTrace={isFinished && result ? result.pitchTrace : livePitchTrace}
                 duration={duration}
+                interactive={isFinished}
+                zoomRange={isFinished ? zoomRange : null}
+                onZoomChange={setZoomRange}
               />
+              <PitchLegend />
+              {isFinished && (
+                <p className="text-xs text-white/40">
+                  Seret (drag) pada grid untuk memperbesar bagian tertentu.
+                </p>
+              )}
             </div>
           )}
 
-          {result && status === "finished" && (
+          {isFinished && (
+            <PitchIssueList issues={issues} onSelectIssue={handleSelectIssue} />
+          )}
+
+          {result && isFinished && (
             <div className="space-y-2 border-t border-white/10 pt-4">
               <p className="text-sm text-white/50">
                 Hasil rekaman vokal ({result.pitchTrace.length} sampel pitch
@@ -133,7 +205,7 @@ export default function KaraokeStage() {
             </div>
           )}
 
-          {score && status === "finished" && <ScoreDashboard score={score} />}
+          {score && isFinished && <ScoreDashboard score={score} />}
         </div>
       )}
     </div>

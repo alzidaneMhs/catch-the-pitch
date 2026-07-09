@@ -1,14 +1,14 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useMemo, useRef, useState, type MouseEvent } from "react";
 import {
   extractVoicedFrames,
   groupIntoNoteSegments,
+  IN_TUNE_CENTS_THRESHOLD,
   type VoicedFrame,
 } from "@/lib/audio/noteSegments";
 import type { PitchTracePoint } from "@/lib/audio/karaokeSession";
 
-const IN_TUNE_CENTS_THRESHOLD = 15;
 const CANVAS_WIDTH = 800;
 const CANVAS_HEIGHT = 320;
 const LEFT_AXIS_WIDTH = 40;
@@ -18,17 +18,37 @@ const MIN_RANGE_SEMITONES = 12;
 const FALLBACK_MIN_MIDI = 48; // C3
 const FALLBACK_MAX_MIDI = 72; // C5
 const NOTE_LINE_WIDTH = 6;
+const MIN_DRAG_SECONDS = 0.3;
+
+export interface TimeRange {
+  start: number;
+  end: number;
+}
 
 interface PitchVisualizerProps {
   pitchTrace: PitchTracePoint[];
   duration: number;
+  interactive?: boolean;
+  zoomRange?: TimeRange | null;
+  onZoomChange?: (range: TimeRange | null) => void;
 }
 
 export default function PitchVisualizer({
   pitchTrace,
   duration,
+  interactive = false,
+  zoomRange = null,
+  onZoomChange,
 }: PitchVisualizerProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  const [dragStart, setDragStart] = useState<number | null>(null);
+  const [dragCurrent, setDragCurrent] = useState<number | null>(null);
+
+  const safeDuration = duration > 0 ? duration : 1;
+  const range: TimeRange = useMemo(
+    () => zoomRange ?? { start: 0, end: safeDuration },
+    [zoomRange, safeDuration],
+  );
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -37,7 +57,9 @@ export default function PitchVisualizer({
 
     const plotWidth = CANVAS_WIDTH - LEFT_AXIS_WIDTH;
     const plotHeight = CANVAS_HEIGHT - BOTTOM_AXIS_HEIGHT;
-    const safeDuration = duration > 0 ? duration : 1;
+    const mapX = (time: number) =>
+      LEFT_AXIS_WIDTH +
+      ((time - range.start) / (range.end - range.start || 1)) * plotWidth;
 
     const frames = extractVoicedFrames(pitchTrace);
     const { minMidi, maxMidi } = computeMidiRange(frames);
@@ -62,22 +84,74 @@ export default function PitchVisualizer({
       }
     }
 
+    ctx.save();
+    ctx.beginPath();
+    ctx.rect(LEFT_AXIS_WIDTH, 0, plotWidth, plotHeight);
+    ctx.clip();
+
     const segments = groupIntoNoteSegments(frames);
     for (const segment of segments) {
-      drawNoteBlob(ctx, segment, safeDuration, plotWidth, midiToY);
+      drawNoteBlob(ctx, segment, mapX, midiToY);
     }
 
+    if (dragStart !== null && dragCurrent !== null) {
+      const x1 = mapX(dragStart);
+      const x2 = mapX(dragCurrent);
+      ctx.fillStyle = "rgba(56,189,248,0.15)";
+      ctx.fillRect(Math.min(x1, x2), 0, Math.abs(x2 - x1), plotHeight);
+    }
+
+    ctx.restore();
+
     ctx.fillStyle = "rgba(255,255,255,0.4)";
-    ctx.fillText("0:00", LEFT_AXIS_WIDTH, CANVAS_HEIGHT - 6);
-    ctx.fillText(formatTime(safeDuration), CANVAS_WIDTH - 32, CANVAS_HEIGHT - 6);
-  }, [pitchTrace, duration]);
+    ctx.fillText(formatTime(range.start), LEFT_AXIS_WIDTH, CANVAS_HEIGHT - 6);
+    ctx.fillText(formatTime(range.end), CANVAS_WIDTH - 32, CANVAS_HEIGHT - 6);
+  }, [pitchTrace, range, dragStart, dragCurrent]);
+
+  const pixelToTime = (event: MouseEvent<HTMLCanvasElement>): number => {
+    const canvas = canvasRef.current;
+    if (!canvas) return range.start;
+    const rect = canvas.getBoundingClientRect();
+    const scaleX = CANVAS_WIDTH / rect.width;
+    const xPx = (event.clientX - rect.left) * scaleX;
+    const plotWidth = CANVAS_WIDTH - LEFT_AXIS_WIDTH;
+    const ratio = clamp((xPx - LEFT_AXIS_WIDTH) / plotWidth, 0, 1);
+    return range.start + ratio * (range.end - range.start);
+  };
+
+  const handleMouseDown = (event: MouseEvent<HTMLCanvasElement>) => {
+    if (!interactive) return;
+    const time = pixelToTime(event);
+    setDragStart(time);
+    setDragCurrent(time);
+  };
+
+  const handleMouseMove = (event: MouseEvent<HTMLCanvasElement>) => {
+    if (!interactive || dragStart === null) return;
+    setDragCurrent(pixelToTime(event));
+  };
+
+  const finishDrag = () => {
+    if (dragStart === null || dragCurrent === null) return;
+    const start = Math.min(dragStart, dragCurrent);
+    const end = Math.max(dragStart, dragCurrent);
+    if (end - start >= MIN_DRAG_SECONDS) {
+      onZoomChange?.({ start, end });
+    }
+    setDragStart(null);
+    setDragCurrent(null);
+  };
 
   return (
     <canvas
       ref={canvasRef}
       width={CANVAS_WIDTH}
       height={CANVAS_HEIGHT}
-      className="w-full rounded-lg border border-white/10"
+      onMouseDown={handleMouseDown}
+      onMouseMove={handleMouseMove}
+      onMouseUp={finishDrag}
+      onMouseLeave={finishDrag}
+      className={`w-full rounded-lg border border-white/10 ${interactive ? "cursor-crosshair" : ""}`}
     />
   );
 }
@@ -85,11 +159,9 @@ export default function PitchVisualizer({
 function drawNoteBlob(
   ctx: CanvasRenderingContext2D,
   segment: VoicedFrame[],
-  safeDuration: number,
-  plotWidth: number,
+  mapX: (time: number) => number,
   midiToY: (midi: number) => number,
 ) {
-  const mapX = (time: number) => LEFT_AXIS_WIDTH + (time / safeDuration) * plotWidth;
   const avgCents =
     segment.reduce((sum, f) => sum + f.cents, 0) / segment.length;
   const color = colorForCents(avgCents);
@@ -153,6 +225,10 @@ function colorForCents(cents: number): string {
   if (cents > IN_TUNE_CENTS_THRESHOLD) return "#f59e0b";
   if (cents < -IN_TUNE_CENTS_THRESHOLD) return "#8b5cf6";
   return "#34d399";
+}
+
+function clamp(value: number, min: number, max: number): number {
+  return Math.min(max, Math.max(min, value));
 }
 
 function formatTime(seconds: number): string {

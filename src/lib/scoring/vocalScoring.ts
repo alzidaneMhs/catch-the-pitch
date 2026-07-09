@@ -1,12 +1,13 @@
 import { midiToNoteName } from "@/lib/audio/noteUtils";
 import {
+  centsStdDev,
   extractVoicedFrames,
   groupIntoNoteSegments,
+  IN_TUNE_CENTS_THRESHOLD,
   type VoicedFrame,
 } from "@/lib/audio/noteSegments";
 import type { PitchTracePoint } from "@/lib/audio/karaokeSession";
 
-const IN_TUNE_CENTS_THRESHOLD = 15;
 const MIN_SUSTAINED_FRAMES = 5;
 
 export type VocalGrade = "A" | "B" | "C" | "D" | "F";
@@ -93,13 +94,6 @@ function computeStabilityScore(frames: VoicedFrame[]): number {
     sustainedSegments.reduce((sum, segment) => sum + centsStdDev(segment), 0) /
     sustainedSegments.length;
   return clamp(100 - avgStdDev * 2, 0, 100);
-}
-
-function centsStdDev(segment: VoicedFrame[]): number {
-  const mean = segment.reduce((sum, f) => sum + f.cents, 0) / segment.length;
-  const variance =
-    segment.reduce((sum, f) => sum + (f.cents - mean) ** 2, 0) / segment.length;
-  return Math.sqrt(variance);
 }
 
 function computeVocalRange(frames: VoicedFrame[]): VocalRangeResult {
