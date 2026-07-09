@@ -5,6 +5,7 @@ import {
   KaraokeSession,
   type KaraokeSessionResult,
   type KaraokeSessionStatus,
+  type PitchTracePoint,
 } from "@/lib/audio/karaokeSession";
 import { frequencyToNote, type NoteInfo } from "@/lib/audio/noteUtils";
 
@@ -14,6 +15,7 @@ export function useKaraokeSession() {
   const [duration, setDuration] = useState(0);
   const [elapsed, setElapsed] = useState(0);
   const [liveNote, setLiveNote] = useState<NoteInfo | null>(null);
+  const [livePitchTrace, setLivePitchTrace] = useState<PitchTracePoint[]>([]);
   const [result, setResult] = useState<KaraokeSessionResult | null>(null);
   const [error, setError] = useState<string | null>(null);
 
@@ -28,6 +30,7 @@ export function useKaraokeSession() {
           setLiveNote(
             point.frequency !== null ? frequencyToNote(point.frequency) : null,
           );
+          setLivePitchTrace((prev) => [...prev, point]);
         },
         onFinished: setResult,
       });
@@ -62,6 +65,7 @@ export function useKaraokeSession() {
   const start = useCallback(async () => {
     setError(null);
     setElapsed(0);
+    setLivePitchTrace([]);
     try {
       await sessionRef.current?.start();
     } catch (err) {
@@ -83,6 +87,7 @@ export function useKaraokeSession() {
     duration,
     elapsed,
     liveNote,
+    livePitchTrace,
     result,
     error,
     loadBackingTrack,

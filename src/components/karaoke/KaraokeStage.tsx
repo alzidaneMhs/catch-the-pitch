@@ -2,6 +2,7 @@
 
 import { useCallback } from "react";
 import { useKaraokeSession } from "@/hooks/useKaraokeSession";
+import PitchVisualizer from "./PitchVisualizer";
 
 const IN_TUNE_CENTS_THRESHOLD = 15;
 
@@ -12,6 +13,7 @@ export default function KaraokeStage() {
     duration,
     elapsed,
     liveNote,
+    livePitchTrace,
     result,
     error,
     loadBackingTrack,
@@ -95,6 +97,22 @@ export default function KaraokeStage() {
                     }${liveNote.cents} cents)`
                   : "—"}
               </div>
+            </div>
+          )}
+
+          {(isRecording || status === "finished") && (
+            <div className="space-y-2">
+              <span className="text-sm text-white/50">
+                Pitch Grid {isRecording ? "(live)" : ""}
+              </span>
+              <PitchVisualizer
+                pitchTrace={
+                  status === "finished" && result
+                    ? result.pitchTrace
+                    : livePitchTrace
+                }
+                duration={duration}
+              />
             </div>
           )}
 
