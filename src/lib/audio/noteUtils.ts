@@ -43,3 +43,9 @@ export function frequencyToNote(frequency: number): NoteInfo {
 export function noteToFrequency(midiNumber: number): number {
   return A4_FREQUENCY * Math.pow(2, (midiNumber - A4_MIDI_NUMBER) / 12);
 }
+
+export function midiToNoteName(midiNumber: number): string {
+  const noteIndex = ((midiNumber % 12) + 12) % 12;
+  const octave = Math.floor(midiNumber / 12) - 1;
+  return `${NOTE_NAMES[noteIndex]}${octave}`;
+}

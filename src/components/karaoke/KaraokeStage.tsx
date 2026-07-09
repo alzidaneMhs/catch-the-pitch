@@ -1,8 +1,10 @@
 "use client";
 
-import { useCallback } from "react";
+import { useCallback, useMemo } from "react";
 import { useKaraokeSession } from "@/hooks/useKaraokeSession";
 import PitchVisualizer from "./PitchVisualizer";
+import ScoreDashboard from "./ScoreDashboard";
+import { computeVocalScore } from "@/lib/scoring/vocalScoring";
 
 const IN_TUNE_CENTS_THRESHOLD = 15;
 
@@ -32,6 +34,11 @@ export default function KaraokeStage() {
   const isRecording = status === "recording";
   const canStart = status === "ready" || status === "finished";
   const isInTune = liveNote ? Math.abs(liveNote.cents) <= IN_TUNE_CENTS_THRESHOLD : false;
+
+  const score = useMemo(
+    () => (result ? computeVocalScore(result.pitchTrace) : null),
+    [result],
+  );
 
   return (
     <div className="rounded-xl border border-white/10 bg-white/5 p-6">
@@ -125,6 +132,8 @@ export default function KaraokeStage() {
               <audio controls src={result.vocalUrl} className="w-full" />
             </div>
           )}
+
+          {score && status === "finished" && <ScoreDashboard score={score} />}
         </div>
       )}
     </div>
