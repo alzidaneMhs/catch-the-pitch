@@ -12,10 +12,18 @@ const MIN_SUSTAINED_FRAMES = 5;
 
 export type VocalGrade = "A" | "B" | "C" | "D" | "F";
 
+export type VocalType =
+  | "bass"
+  | "baritone"
+  | "tenor"
+  | "alto"
+  | "mezzoSoprano"
+  | "soprano";
+
 export interface VocalRangeResult {
   lowestNote: string;
   highestNote: string;
-  classification: string;
+  classification: VocalType;
 }
 
 export interface VocalScoreResult {
@@ -28,13 +36,13 @@ export interface VocalScoreResult {
 }
 
 // Rentang not standar per jenis suara (referensi umum, dalam MIDI number).
-const VOCAL_TYPE_RANGES: { name: string; minMidi: number; maxMidi: number }[] = [
-  { name: "Bass", minMidi: 40, maxMidi: 64 },
-  { name: "Bariton", minMidi: 45, maxMidi: 69 },
-  { name: "Tenor", minMidi: 48, maxMidi: 72 },
-  { name: "Alto", minMidi: 53, maxMidi: 77 },
-  { name: "Mezzo-Soprano", minMidi: 57, maxMidi: 81 },
-  { name: "Sopran", minMidi: 60, maxMidi: 84 },
+const VOCAL_TYPE_RANGES: { type: VocalType; minMidi: number; maxMidi: number }[] = [
+  { type: "bass", minMidi: 40, maxMidi: 64 },
+  { type: "baritone", minMidi: 45, maxMidi: 69 },
+  { type: "tenor", minMidi: 48, maxMidi: 72 },
+  { type: "alto", minMidi: 53, maxMidi: 77 },
+  { type: "mezzoSoprano", minMidi: 57, maxMidi: 81 },
+  { type: "soprano", minMidi: 60, maxMidi: 84 },
 ];
 
 const EMPTY_RESULT: VocalScoreResult = {
@@ -111,15 +119,15 @@ function computeVocalRange(frames: VoicedFrame[]): VocalRangeResult {
   };
 }
 
-function classifyVocalType(lowestMidi: number, highestMidi: number): string {
-  let bestMatch = VOCAL_TYPE_RANGES[0].name;
+function classifyVocalType(lowestMidi: number, highestMidi: number): VocalType {
+  let bestMatch = VOCAL_TYPE_RANGES[0].type;
   let bestOverlap = -Infinity;
-  for (const type of VOCAL_TYPE_RANGES) {
+  for (const range of VOCAL_TYPE_RANGES) {
     const overlap =
-      Math.min(highestMidi, type.maxMidi) - Math.max(lowestMidi, type.minMidi);
+      Math.min(highestMidi, range.maxMidi) - Math.max(lowestMidi, range.minMidi);
     if (overlap > bestOverlap) {
       bestOverlap = overlap;
-      bestMatch = type.name;
+      bestMatch = range.type;
     }
   }
   return bestMatch;

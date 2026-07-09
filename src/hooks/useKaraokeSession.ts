@@ -8,8 +8,10 @@ import {
   type PitchTracePoint,
 } from "@/lib/audio/karaokeSession";
 import { frequencyToNote, type NoteInfo } from "@/lib/audio/noteUtils";
+import { useLocale } from "@/lib/i18n/LocaleContext";
 
 export function useKaraokeSession() {
+  const { t } = useLocale();
   const [status, setStatus] = useState<KaraokeSessionStatus>("idle");
   const [fileName, setFileName] = useState<string | null>(null);
   const [duration, setDuration] = useState(0);
@@ -54,12 +56,12 @@ export function useKaraokeSession() {
       } catch (err) {
         setError(
           err instanceof Error
-            ? `Gagal memuat backing track: ${err.message}`
-            : "Gagal memuat backing track.",
+            ? t("error.loadTrack", { message: err.message })
+            : t("error.loadTrackGeneric"),
         );
       }
     },
-    [ensureSession],
+    [ensureSession, t],
   );
 
   const start = useCallback(async () => {
@@ -71,11 +73,11 @@ export function useKaraokeSession() {
     } catch (err) {
       setError(
         err instanceof Error
-          ? `Gagal memulai rekaman: ${err.message}`
-          : "Gagal memulai rekaman.",
+          ? t("error.startRecording", { message: err.message })
+          : t("error.startRecordingGeneric"),
       );
     }
-  }, []);
+  }, [t]);
 
   const stop = useCallback(async () => {
     await sessionRef.current?.stop();

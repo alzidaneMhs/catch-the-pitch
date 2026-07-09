@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useMemo, useState, type ReactNode } from "react";
 import { useKaraokeSession } from "@/hooks/useKaraokeSession";
 import PitchVisualizer, { type TimeRange } from "./PitchVisualizer";
 import PitchLegend from "./PitchLegend";
@@ -9,8 +9,10 @@ import ScoreDashboard from "./ScoreDashboard";
 import { IN_TUNE_CENTS_THRESHOLD } from "@/lib/audio/noteSegments";
 import { computeVocalScore } from "@/lib/scoring/vocalScoring";
 import { detectPitchIssues, type PitchIssue } from "@/lib/scoring/pitchIssues";
+import { useLocale } from "@/lib/i18n/LocaleContext";
 
 export default function KaraokeStage() {
+  const { t } = useLocale();
   const {
     status,
     fileName,
@@ -57,39 +59,22 @@ export default function KaraokeStage() {
   }, []);
 
   return (
-    <div className="rounded-xl border border-white/10 bg-white/5 p-6">
-      <h2 className="text-lg font-semibold mb-4">Karaoke Session</h2>
+    <div className="rounded-xl border border-white/10 bg-white/5 p-4 sm:p-6">
+      <h2 className="text-lg font-semibold mb-4">{t("stage.title")}</h2>
 
       <details className="mb-4 rounded-lg bg-white/5 p-3 text-sm">
         <summary className="cursor-pointer font-medium text-white/80">
-          Cara membaca hasil analisis
+          {t("stage.help.summary")}
         </summary>
         <div className="mt-2 space-y-1.5 text-white/60">
           <p>
-            <strong className="text-white/80">Pitch Grid</strong> menampilkan
-            nada yang kamu nyanyikan dari waktu ke waktu — sumbu vertikal
-            adalah nada, sumbu horizontal adalah waktu. Hijau berarti nada
-            tepat, kuning berarti terlalu tinggi, ungu berarti terlalu rendah.
+            <BoldText text={t("stage.help.grid")} />
           </p>
           <p>
-            Setelah selesai, kamu bisa{" "}
-            <strong className="text-white/80">
-              seret (drag) pada grid untuk memperbesar (zoom)
-            </strong>{" "}
-            bagian tertentu, atau klik salah satu item di daftar{" "}
-            <strong className="text-white/80">
-              &quot;Bagian yang perlu diperbaiki&quot;
-            </strong>{" "}
-            untuk langsung melihat detailnya.
+            <BoldText text={t("stage.help.zoom")} />
           </p>
           <p>
-            <strong className="text-white/80">Akurasi Nada</strong> mengukur
-            seberapa presisi nadamu, <strong className="text-white/80">
-              Stabilitas Kontrol
-            </strong>{" "}
-            mengukur seberapa steady kamu menahan nada panjang, dan{" "}
-            <strong className="text-white/80">Frekuensi Fals</strong> menghitung
-            berapa kali nadamu melenceng cukup jauh.
+            <BoldText text={t("stage.help.metrics")} />
           </p>
         </div>
       </details>
@@ -108,7 +93,7 @@ export default function KaraokeStage() {
         <div className="mt-4 space-y-4">
           <p className="text-sm text-white/60 truncate">{fileName}</p>
 
-          <div className="flex gap-2">
+          <div className="flex flex-col gap-2 sm:flex-row">
             <button
               onClick={() => {
                 setZoomRange(null);
@@ -117,14 +102,14 @@ export default function KaraokeStage() {
               disabled={!canStart}
               className="rounded-lg bg-emerald-600 px-4 py-2 text-sm font-medium text-white hover:bg-emerald-500 disabled:opacity-40 disabled:hover:bg-emerald-600"
             >
-              Mulai Karaoke
+              {t("stage.start")}
             </button>
             <button
               onClick={() => void stop()}
               disabled={!isRecording}
               className="rounded-lg bg-red-600 px-4 py-2 text-sm font-medium text-white hover:bg-red-500 disabled:opacity-40 disabled:hover:bg-red-600"
             >
-              Stop
+              {t("stage.stop")}
             </button>
           </div>
 
@@ -145,9 +130,9 @@ export default function KaraokeStage() {
 
           {isRecording && (
             <div>
-              <span className="text-sm text-white/50">Pitch Live</span>
+              <span className="text-sm text-white/50">{t("stage.pitchLive")}</span>
               <div
-                className={`text-3xl font-bold ${
+                className={`text-2xl font-bold sm:text-3xl ${
                   liveNote ? (isInTune ? "text-emerald-400" : "text-amber-400") : ""
                 }`}
               >
@@ -164,14 +149,14 @@ export default function KaraokeStage() {
             <div className="space-y-2">
               <div className="flex items-center justify-between">
                 <span className="text-sm text-white/50">
-                  Pitch Grid {isRecording ? "(live)" : ""}
+                  {t("stage.pitchGrid")} {isRecording ? t("stage.live") : ""}
                 </span>
                 {isFinished && zoomRange && (
                   <button
                     onClick={() => setZoomRange(null)}
                     className="text-xs text-sky-400 hover:text-sky-300"
                   >
-                    Reset Zoom
+                    {t("stage.resetZoom")}
                   </button>
                 )}
               </div>
@@ -184,9 +169,7 @@ export default function KaraokeStage() {
               />
               <PitchLegend />
               {isFinished && (
-                <p className="text-xs text-white/40">
-                  Seret (drag) pada grid untuk memperbesar bagian tertentu.
-                </p>
+                <p className="text-xs text-white/40">{t("stage.dragHint")}</p>
               )}
             </div>
           )}
@@ -198,8 +181,7 @@ export default function KaraokeStage() {
           {result && isFinished && (
             <div className="space-y-2 border-t border-white/10 pt-4">
               <p className="text-sm text-white/50">
-                Hasil rekaman vokal ({result.pitchTrace.length} sampel pitch
-                tercatat)
+                {t("stage.vocalResult", { count: result.pitchTrace.length })}
               </p>
               <audio controls src={result.vocalUrl} className="w-full" />
             </div>
@@ -209,6 +191,19 @@ export default function KaraokeStage() {
         </div>
       )}
     </div>
+  );
+}
+
+function BoldText({ text }: { text: string }): ReactNode {
+  const parts = text.split(/(\*\*.+?\*\*)/g);
+  return parts.map((part, i) =>
+    part.startsWith("**") && part.endsWith("**") ? (
+      <strong key={i} className="text-white/80">
+        {part.slice(2, -2)}
+      </strong>
+    ) : (
+      <span key={i}>{part}</span>
+    ),
   );
 }
 

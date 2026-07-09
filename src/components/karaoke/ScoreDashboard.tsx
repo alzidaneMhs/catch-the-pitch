@@ -1,4 +1,8 @@
-import type { VocalGrade, VocalScoreResult } from "@/lib/scoring/vocalScoring";
+"use client";
+
+import type { VocalGrade, VocalScoreResult, VocalType } from "@/lib/scoring/vocalScoring";
+import { useLocale } from "@/lib/i18n/LocaleContext";
+import type { TranslationKey } from "@/lib/i18n/translations";
 
 const GRADE_COLORS: Record<VocalGrade, string> = {
   A: "text-emerald-400",
@@ -8,11 +12,22 @@ const GRADE_COLORS: Record<VocalGrade, string> = {
   F: "text-red-400",
 };
 
+const VOCAL_TYPE_KEY: Record<VocalType, TranslationKey> = {
+  bass: "vocalType.bass",
+  baritone: "vocalType.baritone",
+  tenor: "vocalType.tenor",
+  alto: "vocalType.alto",
+  mezzoSoprano: "vocalType.mezzoSoprano",
+  soprano: "vocalType.soprano",
+};
+
 interface ScoreDashboardProps {
   score: VocalScoreResult;
 }
 
 export default function ScoreDashboard({ score }: ScoreDashboardProps) {
+  const { t } = useLocale();
+
   return (
     <div className="space-y-4 border-t border-white/10 pt-4">
       <div className="flex items-center gap-4">
@@ -24,37 +39,32 @@ export default function ScoreDashboard({ score }: ScoreDashboardProps) {
             {score.overallScore}
             <span className="text-base font-normal text-white/40">/100</span>
           </div>
-          <p className="text-sm text-white/50">Overall Score</p>
-          <p className="text-xs text-white/40">
-            Gabungan akurasi nada (60%) dan stabilitas kontrol (40%).
-          </p>
+          <p className="text-sm text-white/50">{t("score.overall")}</p>
+          <p className="text-xs text-white/40">{t("score.overall.caption")}</p>
         </div>
       </div>
 
-      <div className="grid grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
         <ScoreBar
-          label="Akurasi Nada"
+          label={t("score.accuracy.label")}
           value={score.accuracyScore}
-          description="Seberapa dekat nada yang kamu nyanyikan dengan nada yang benar. Semakin tinggi, semakin presisi."
+          description={t("score.accuracy.desc")}
         />
         <ScoreBar
-          label="Stabilitas Kontrol"
+          label={t("score.stability.label")}
           value={score.stabilityScore}
-          description="Seberapa stabil kamu menahan nada panjang tanpa goyang atau naik-turun tak sengaja."
+          description={t("score.stability.desc")}
         />
       </div>
 
-      <div className="grid grid-cols-2 gap-4 text-sm">
+      <div className="grid grid-cols-1 gap-4 text-sm sm:grid-cols-2">
         <div>
-          <span className="text-white/50">Frekuensi Fals</span>
-          <div className="text-lg font-semibold">{score.offPitchCount}x</div>
-          <p className="text-xs text-white/40">
-            Jumlah bagian nada yang melenceng cukup jauh (lebih dari ±15 sen)
-            dari nada yang seharusnya.
-          </p>
+          <span className="text-white/50">{t("score.offPitch.label")}</span>
+          <div className="text-lg font-semibold">{score.offPitchCount}×</div>
+          <p className="text-xs text-white/40">{t("score.offPitch.desc")}</p>
         </div>
         <div>
-          <span className="text-white/50">Vocal Range</span>
+          <span className="text-white/50">{t("score.vocalRange.label")}</span>
           <div className="text-lg font-semibold">
             {score.vocalRange
               ? `${score.vocalRange.lowestNote} – ${score.vocalRange.highestNote}`
@@ -62,8 +72,8 @@ export default function ScoreDashboard({ score }: ScoreDashboardProps) {
           </div>
           {score.vocalRange && (
             <span className="text-xs text-white/40">
-              {score.vocalRange.classification} — rentang nada terendah sampai
-              tertinggi yang berhasil kamu capai.
+              {t(VOCAL_TYPE_KEY[score.vocalRange.classification])} —{" "}
+              {t("score.vocalRange.desc")}
             </span>
           )}
         </div>
