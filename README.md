@@ -1,4 +1,5 @@
-#Catch The Pitch
+## Catch The Pitch
+
 A web-based karaoke application and real-time vocal performance analyzer — detects out-of-tune notes, visualizes pitch Melodyne-style, and provides vocal scoring/grading.
 
 1. Next.js (App Router) + TypeScript + Tailwind CSS project setup.
