@@ -19,4 +19,4 @@ A web-based karaoke application and real-time vocal performance analyzer — det
 npm install
 npm run dev
 ```
-Open http://localhost:3000(http://localhost:3000) Click Start Mic and allow microphone access in your browser to see the real-time pitch detection (Hz, notes, and cents deviation).
+Open [http://localhost:3000](http://localhost:3000) Click Start Mic and allow microphone access in your browser to see the real-time pitch detection (Hz, notes, and cents deviation).
